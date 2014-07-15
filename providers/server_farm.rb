@@ -8,30 +8,45 @@ end
 
 use_inline_resources
 
+
 action :create do
   farm_name = @new_resource.name
 
   if @current_resource.exists
     Chef::Log.info "Server Farm #{ farm_name } already exists - not recreating."
   else
-#    Chef::Log.info "In Create"
     converge_by("Creating Server Farm #{ farm_name }") do
       Chef::Log.info "Add Web Farm #{farm_name }==================================="
       create_server_farm farm_name  
     end
   end
 
-  #servers
-  if @new_resource.servers
-    @new_resource.servers.each do |server_name|
-      Chef::Log.info "-----------> #{server_name}   ---------------"
-      add_server_to_farm farm_name, server_name
-    end
-  end
-  if @current_resource.servers 
-    current_resource.servers.each {|s| Chef::Log.info "CURR!!!!!!!!!! #{s} !!!!!!!!!!"}
-  end 
+  new_list = @new_resource.servers || []
+  cur_list = @current_resource.servers || []
 
+  servers_to_add = new_list - cur_list
+  servers_to_remove =  cur_list - new_list 
+  servers_unchanged = cur_list - servers_to_add - servers_to_remove
+
+  if servers_to_add 
+    servers_to_add.each do |s| 
+      converge_by("Adding #{s} to list of addresses in server farm #{farm_name}") do
+        Chef::Log.info "Adding #{s} to list of addresses in server farm #{farm_name}"
+        add_server_to_farm farm_name, s
+      end
+    end
+  end 
+  if servers_to_remove 
+    servers_to_remove.each do |s| 
+      converge_by("Removing #{s} from list of addresses in server farm #{farm_name}") do
+        Chef::Log.info "Removing #{s} from list of addresses in server farm #{farm_name}"
+        remove_server_from_farm farm_name, s
+      end
+    end
+  end 
+  #if servers_unchanged   
+  #  servers_unchanged .each {|s| Chef::Log.info " No Change   !!!!!!!!!! #{s} !!!!!!!!!!"}
+  #end 
 end
 
 action :delete do
