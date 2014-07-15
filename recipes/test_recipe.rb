@@ -22,4 +22,5 @@ end
 iis_arr_server_farm "TestFarm5" do
   name "TestFarm"
   action :create
+  servers ["server1", "server2", "192.168.0.1"]
 end
