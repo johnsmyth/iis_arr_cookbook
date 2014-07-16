@@ -18,6 +18,7 @@ action :create do
     converge_by("Creating Server Farm #{ farm_name }") do
       Chef::Log.info "Add Web Farm #{farm_name }==================================="
       create_server_farm farm_name  
+      @new_resource.updated_by_last_action(true)
     end
   end
 
@@ -30,6 +31,7 @@ action :create do
       converge_by("Changing Server Farm health check for #{ farm_name } from #{@current_resource.health_check_url } to #{@new_resource.health_check_url }") do
         Chef::Log.info "Changing Server Farm health check for #{ farm_name } from #{@current_resource.health_check_url } to #{@new_resource.health_check_url }"
         add_health_check_url farm_name, @new_resource.health_check_url
+        @new_resource.updated_by_last_action(true)
       end
     end
   end
@@ -81,6 +83,7 @@ def configure_servers(farm_name)
       converge_by("Adding #{s} to list of addresses in server farm #{farm_name}") do
         Chef::Log.info "Adding #{s} to list of addresses in server farm #{farm_name}"
         add_server_to_farm farm_name, s
+        @new_resource.updated_by_last_action(true)
       end
     end
   end 
@@ -89,6 +92,7 @@ def configure_servers(farm_name)
       converge_by("Removing #{s} from list of addresses in server farm #{farm_name}") do
         Chef::Log.info "Removing #{s} from list of addresses in server farm #{farm_name}"
         remove_server_from_farm farm_name, s
+        @new_resource.updated_by_last_action(true)
       end
     end
   end 
