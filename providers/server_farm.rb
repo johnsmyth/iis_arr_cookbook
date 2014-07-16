@@ -21,12 +21,60 @@ action :create do
     end
   end
 
+  if @new_resource.servers
+    configure_servers farm_name
+  end
+
+  if @new_resource.health_check_url
+    if @current_resource.health_check_url != @new_resource.health_check_url
+      converge_by("Changing Server Farm health check for #{ farm_name } from #{@current_resource.health_check_url } to #{@new_resource.health_check_url }") do
+        Chef::Log.info "Changing Server Farm health check for #{ farm_name } from #{@current_resource.health_check_url } to #{@new_resource.health_check_url }"
+        add_health_check_url farm_name, @new_resource.health_check_url
+      end
+    end
+  end
+
+end
+
+action :delete do
+  if @current_resource.exists
+    converge_by("Delete server farm #{ @new_resource.name }") do
+      Chef::Log.info "Deleting Server Farm #{ @new_resource }"
+      delete_server_farm ( @new_resource.name)
+    end
+  else
+    Chef::Log.info "#{ @current_resource } doesn't exist - can't delete."
+  end
+end
+
+def load_current_resource
+  #Require nokogiri here to delay loading until after recipe has run to install it
+  require 'nokogiri'
+  
+  @appcmd = "#{ENV['systemdrive']}\\windows\\sysnative\\inetsrv\\appcmd.exe"
+
+  @current_resource = Chef::Resource::IisArrServerFarm.new(@new_resource.name)
+  
+  
+  if server_farm_exists?(@current_resource)
+    @current_resource.exists = true
+    @current_resource.servers( load_farm_server_list (@current_resource.name) )
+    @current_resource.health_check_url(  load_health_check_url (@current_resource.name) )
+    Chef::Log.info "!!!!!!!! -- URL is #{@current_resource.health_check_url } --- !!!!!!!!!!!"
+  end
+end
+
+
+private
+
+def configure_servers(farm_name) 
+
+
   new_list = @new_resource.servers || []
   cur_list = @current_resource.servers || []
 
   servers_to_add = new_list - cur_list
   servers_to_remove =  cur_list - new_list 
-  servers_unchanged = cur_list - servers_to_add - servers_to_remove
 
   if servers_to_add 
     servers_to_add.each do |s| 
@@ -44,36 +92,12 @@ action :create do
       end
     end
   end 
+  #servers_unchanged = cur_list - servers_to_add - servers_to_remove
   #if servers_unchanged   
   #  servers_unchanged .each {|s| Chef::Log.info " No Change   !!!!!!!!!! #{s} !!!!!!!!!!"}
   #end 
 end
-
-action :delete do
-  if @current_resource.exists
-    converge_by("Delete server farm #{ @new_resource.name }") do
-      Chef::Log.info "Deleting Server Farm #{ @new_resource }"
-      delete_server_farm ( @new_resource.name)
-    end
-  else
-    Chef::Log.info "#{ @current_resource } doesn't exist - can't delete."
-  end
-end
-
-def load_current_resource
-  @appcmd = "#{ENV['systemdrive']}\\windows\\sysnative\\inetsrv\\appcmd.exe"
-  @current_resource = Chef::Resource::IisArrServerFarm.new(@new_resource.name)
-  #@current_resource.servers(@new_resource.servers)
-  #@current_resource.health_test_url(@new_resource.health_test_url)
-
-  if server_farm_exists?(@current_resource)
-    @current_resource.exists = true
-    @current_resource.servers( load_farm_server_list (@current_resource.name) )
-  end
-end
-
-
-private
+  
 
 def create_server_farm(farm_name)
   execute "#{@appcmd} set config -section:webFarms /+\"[name='#{farm_name}']\" /commit:apphost" do
@@ -99,13 +123,37 @@ def remove_server_from_farm(farm_name, server_name)
   end
 end
 
+def load_health_check_url( farm_name )
+  cmd_str = "#{@appcmd} list config -section:webFarms"
+  Chef::Log.debug "Checking existence of ARR server farm with command: #{cmd_str}"
+  cmd = shell_out("#{cmd_str}", { :returns => [0] })
+  xml_doc = Nokogiri::XML(cmd.stdout)
+  url_node = xml_doc.xpath("//webFarm[@name='#{farm_name}']/applicationRequestRouting/healthCheck")
+  unless url_node.empty?
+      if url_node.attr("url")
+        return url_node.attr("url").to_s
+      else 
+        return ""
+      end
+  else
+    return ""
+  end
+  
+end
+
+def add_health_check_url(farm_name, url)
+  execute "#{@appcmd} set config -section:webFarms /\"[name='#{farm_name}'].applicationRequestRouting.healthCheck.url:\"#{url}\"\" /commit:apphost" do
+    action  :run
+  end
+end
 
 def load_farm_server_list( farm_name)
   cmd_str = "#{@appcmd} list config -section:webFarms"
   Chef::Log.debug "Checking existence of ARR server farm with command: #{cmd_str}"
-
   cmd = shell_out("#{cmd_str}", { :returns => [0] })
-  servers = cmd.stdout.scan( /<server\s+address="([^"]+)"/m  ).flatten
+  xml_doc = Nokogiri::XML(cmd.stdout)
+  servers = []
+  xml_doc.xpath("//webFarm[@name='#{farm_name}']/server").each { |s| servers.push s.attr("address") }
 
   return servers || []
 

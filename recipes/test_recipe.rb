@@ -14,6 +14,8 @@ iis_arr_server_farm "TestFarm3" do
   name "TestFarm"
   action :delete
 end
+
+
 iis_arr_server_farm "TestFarm4" do
   name "TestFarm"
   action :delete
@@ -29,6 +31,7 @@ iis_arr_server_farm "TestFarm6" do
   name "TestFarm"
   action :create
   servers ["server1", "server2", "192.168.0.1", "ADDME"]
+  health_check_url 'http://www.healthcheck-save.com'
 end
 
 iis_arr_server_farm "TestFarm6" do
@@ -42,4 +45,5 @@ end
 iis_arr_server_farm "TestFarm6" do
   action :create
   servers ["serverx", "servery" ]
+  health_check_url 'http://www.healthcheck.com'
 end

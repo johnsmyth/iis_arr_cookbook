@@ -11,6 +11,10 @@
 require 'chef/win32/version'
 windows_version = Chef::ReservedNames::Win32::Version.new
 
+chef_gem 'nokogiri' do
+  action :install
+end
+
 include_recipe 'webpi'
 
 # Add IIS roles
