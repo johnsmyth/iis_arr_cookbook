@@ -55,6 +55,13 @@ iis_arr_rewrite_rule "ARR_TestFarm6_TestRule1" do
   stop_processing true
 end
 
+iis_arr_rewrite_rule "ARR_TestFarm6_TestRule1" do
+  pattern  'CHANGED Pattern'
+  pattern_syntax 'Wildcard'
+  url 'http://New_URL'
+  stop_processing false
+end
+
 iis_arr_rewrite_rule "TestFarm6_TestRule2" do
   pattern  '(/*)([^/]+)\/(/*)(0012)(.)?.*\/()(.)?.*'
   pattern_syntax 'ECMAScript'

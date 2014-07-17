@@ -82,7 +82,10 @@ def converge_url
     if @new_resource.url != @current_resource.url
       converge_by("new url - changing from #{@current_resource.url} to #{@new_resource.url}") do
         #update it
-        #@new_resource.updated_by_last_action(true)
+        execute "#{@appcmd} set config -section:system.webServer/rewrite/globalRules /\"[name='#{@new_resource.name}'].action.type:Rewrite\" /\"[name='#{@new_resource.name}'].action.url:#{@new_resource.url}\" /commit:apphost" do
+          action  :run
+        end
+        @new_resource.updated_by_last_action(true)
       end
     else
       Chef::Log.debug "url unchanged - nothing to do (#{@new_resource.url} = #{@current_resource.url})"
@@ -92,7 +95,10 @@ def converge_stop_processing
     if @new_resource.stop_processing != @current_resource.stop_processing
       converge_by("new stop_processing - changing from #{@current_resource.stop_processing} to #{@new_resource.stop_processing}") do
         #update it
-        #@new_resource.updated_by_last_action(true)
+        execute "#{@appcmd} set config -section:system.webServer/rewrite/globalRules /\"[name='#{@new_resource.name}'].stopProcessing:#{@new_resource.stop_processing.to_s}\" /commit:apphost" do
+          action  :run
+        end
+        @new_resource.updated_by_last_action(true)
       end
     else
       Chef::Log.debug "stop_processing unchanged - nothing to do (#{@new_resource.stop_processing} = #{@current_resource.stop_processing})"
@@ -102,7 +108,10 @@ def converge_pattern
     if @new_resource.pattern != @current_resource.pattern
       converge_by("new pattern - changing from #{@current_resource.pattern} to #{@new_resource.pattern}") do
         #update it
-        #@new_resource.updated_by_last_action(true)
+        execute "#{@appcmd} set config -section:system.webServer/rewrite/globalRules /\"[name='#{@new_resource.name}'].match.url:#{@new_resource.pattern }\" /commit:apphost" do
+          action  :run
+        end
+        @new_resource.updated_by_last_action(true)
       end
     else
       Chef::Log.debug "pattern unchanged - nothing to do (#{@new_resource.pattern} = #{@current_resource.pattern})"
@@ -112,7 +121,10 @@ def converge_pattern_syntax
     if @new_resource.pattern_syntax != @current_resource.pattern_syntax
       converge_by("new pattern_syntax - changing from #{@current_resource.pattern_syntax} to #{@new_resource.pattern_syntax}") do
         #update it
-        #@new_resource.updated_by_last_action(true)
+        execute "#{@appcmd} set config -section:system.webServer/rewrite/globalRules /\"[name='#{@new_resource.name}'].patternSyntax:#{@new_resource.pattern_syntax}\" /commit:apphost" do
+          action  :run
+        end
+        @new_resource.updated_by_last_action(true)
       end
     else
       Chef::Log.debug "pattern_syntax unchanged - nothing to do (#{@new_resource.pattern_syntax} = #{@current_resource.pattern_syntax})"
