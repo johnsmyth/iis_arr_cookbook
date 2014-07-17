@@ -47,3 +47,26 @@ iis_arr_server_farm "TestFarm6" do
   servers ["serverx", "servery" ]
   health_check_url 'http://www.healthcheck.com'
 end
+
+iis_arr_rewrite_rule "ARR_TestFarm6_TestRule1" do
+  pattern  '(/*)([^/]+)\/(/*)(0012)(.)?.*\/()(.)?.*'
+  pattern_syntax 'ECMAScript'
+  url 'http://TestFarm6/{R:0}'
+  stop_processing true
+end
+
+iis_arr_rewrite_rule "TestFarm6_TestRule2" do
+  pattern  '(/*)([^/]+)\/(/*)(0012)(.)?.*\/()(.)?.*'
+  pattern_syntax 'ECMAScript'
+  url 'http://TestFarm6/{R:0}'
+end
+
+iis_arr_rewrite_rule "TestFarm6_TestRule3" do
+  pattern  '(/*)([^/]+)\/(/*)(0012)(.)?.*\/()(.)?.*'
+  pattern_syntax 'ECMAScript'
+  url 'http://TestFarm6/{R:0}'
+end
+
+iis_arr_rewrite_rule "TestFarm6_TestRule3" do
+  action :delete
+end

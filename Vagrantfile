@@ -13,8 +13,7 @@ Vagrant.configure("2") do |config|
 
   # Every Vagrant virtual environment requires a box to build off of.
   config.vm.box = "rn-w2k12r2-v1.0.0"
-  #######config.vm.box = "Berkshelf-CentOS-6.3-x86_64-minimal"
-  #######config.vm.box_url = "https://dl.dropbox.com/u/31081437/Berkshelf-CentOS-6.3-x86_64-minimal.box"
+  #######config.vm.box_url = ""
   #
    config.vm.provider :virtualbox do |vb, override|
      # Don't boot with headless mode

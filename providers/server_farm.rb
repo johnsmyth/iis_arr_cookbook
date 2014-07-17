@@ -129,7 +129,6 @@ end
 
 def load_health_check_url( farm_name )
   cmd_str = "#{@appcmd} list config -section:webFarms"
-  Chef::Log.debug "Checking existence of ARR server farm with command: #{cmd_str}"
   cmd = shell_out("#{cmd_str}", { :returns => [0] })
   xml_doc = Nokogiri::XML(cmd.stdout)
   url_node = xml_doc.xpath("//webFarm[@name='#{farm_name}']/applicationRequestRouting/healthCheck")
